@@ -1,11 +1,12 @@
 #### COLOUR
 
-tm_icon="🙊"
-tm_color_active=colour51
+# tm_icon="🙊"
+tm_icon="🤡"
+tm_color_active=colour41
 tm_color_inactive=colour241
-tm_color_feature=colour198
-tm_color_music=colour41
-tm_active_border_color=colour51
+tm_color_feature=colour13
+tm_color_music=colour164
+tm_active_border_color=colour198
 
 # separators
 tm_separator_left_bold="◀"
@@ -49,7 +50,8 @@ set-option -g display-panes-colour $tm_color_inactive
 # clock
 set-window-option -g clock-mode-colour $tm_color_active
 
-tm_tunes="#[fg=$tm_color_music]#(osascript ~/.dotfiles/applescripts/tunes.scpt)"
+# tm_tunes="#[fg=$tm_color_music]#(osascript ~/.dotfiles/applescripts/tunes.scpt | cut -c 1-50)"
+tm_tunes="#[fg=$tm_color_music]#(osascript -l JavaScript ~/.dotfiles/applescripts/tunes.js)"
 tm_battery="#(~/.dotfiles/bin/battery_indicator.sh)"
 
 tm_date="#[fg=$tm_color_inactive] %R %d %b"

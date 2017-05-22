@@ -1,6 +1,11 @@
 export DOTFILES=$HOME/.dotfiles
 export ZSH=$DOTFILES/zsh
 
+command_exists() {
+    type "$1" > /dev/null 2>&1
+}
+
+
 # display how long all tasks over 10 seconds take
 export REPORTTIME=10
 
@@ -27,6 +32,7 @@ compinit
 for config ($ZSH/**/*completion.sh) source $config
 
 export EDITOR='nvim'
+export GIT_EDITOR='nvim'
 
 export PATH=/usr/local/bin:$PATH
 
@@ -46,7 +52,7 @@ fi
 [ -z "$TMUX" ] && export TERM=xterm-256color-italic
 
 # install rbenv
-if hash rbenv 2>/dev/null; then
+if command_exists rbenv; then
     eval "$(rbenv init -)"
 fi
 
@@ -56,35 +62,9 @@ if [[ -d ~/.rvm ]]; then
 fi
 
 # alias git to hub
-if hash hub 2>/dev/null; then
+if command_exists hub; then
     eval "$(hub alias -s)"
 fi
 
-# source nvm
-export NVM_DIR=~/.nvm
-
-load-nvmrc() {
-    if [[ -f .nvmrc && -r .nvmrc ]]; then
-        nvm use
-    fi
-}
-add-zsh-hook chpwd load-nvmrc
-
-if hash brew 2>/dev/null; then
-    source $(brew --prefix nvm)/nvm.sh
-    source `brew --prefix`/etc/profile.d/z.sh
-    # when sourcing, check and ensure that the correct Node version is set
-    load-nvmrc
-
-fi
-
 [ -f ~/.fzf.zsh ] && source ~/.fzf.zsh
-
-if [ -z ${DOTFILES_LOADED+x} ]; then
-    # install zsh-syntax-highlighting
-    source /usr/local/share/zsh-syntax-highlighting/zsh-syntax-highlighting.zsh
-    # install zsh autosuggestions
-    source /usr/local/share/zsh-autosuggestions/zsh-autosuggestions.zsh
-fi
-
-DOTFILES_LOADED=1
+export FZF_DEFAULT_COMMAND='ag -g ""'

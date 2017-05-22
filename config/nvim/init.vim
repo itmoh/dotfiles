@@ -18,7 +18,14 @@ set backupdir=~/.vim-tmp,~/.tmp,~/tmp,/var/tmp,/tmp
 set directory=~/.vim-tmp,~/.tmp,~/tmp,/var/tmp,/tmp
 
 let g:python_host_prog = '/usr/local/bin/python'
+let g:python2_host_prog = '/usr/local/bin/python'
 let g:python3_host_prog = '/usr/local/bin/python3'
+
+if (has('nvim'))
+	" show results of substition as they're happening
+	" but don't open a split
+	set inccommand=nosplit
+endif
 
 " }}}
 
@@ -27,13 +34,16 @@ let g:python3_host_prog = '/usr/local/bin/python3'
 " switch cursor to line when in insert mode, and block when not
 let $NVIM_TUI_ENABLE_CURSOR_SHAPE=1
 
+"fix for yankring and neovim
+let g:yankring_clipboard_monitor=0
+
 if &term =~ '256color'
     " disable background color erase
     set t_ut=
 endif
 
 " enable 24 bit color support if supported
-if (empty($TMUX) && has("termguicolors"))
+if (has('mac') && empty($TMUX) && has("termguicolors"))
     set termguicolors
 endif
 
@@ -75,7 +85,8 @@ match ErrorMsg '^\(<\|=\|>\)\{7\}\([^=].\+\)\?$'
 set backspace=indent,eol,start
 
 " Tab control
-set noexpandtab             " insert tabs rather than spaces for <Tab>
+filetype plugin indent on
+set expandtab             " insert spaces rather than tabs for <Tab>
 set smarttab                " tab respects 'tabstop', 'shiftwidth', and 'softtabstop'
 set tabstop=4               " the visible width of tabs
 set softtabstop=4           " edit as if the tabs are 4 characters wide
@@ -166,6 +177,7 @@ nmap <leader>md :%!markdown --html4tags <cr>
 
 " remove extra whitespace
 nmap <leader><space> :%s/\s\+$<cr>
+nmap <leader><space><space> :%s/\n\{2,}/\r\r/g<cr>
 
 
 nmap <leader>l :set list!<cr>
@@ -192,6 +204,10 @@ map <leader>wc :wincmd q<cr>
 " toggle cursor line
 nnoremap <leader>i :set cursorline!<cr>
 
+" set relative numbers
+set relativenumber 
+set number
+
 " scroll the viewport faster
 nnoremap <C-e> 3<C-e>
 nnoremap <C-y> 3<C-y>
@@ -214,8 +230,6 @@ let g:silent_custom_command = 0
 " helpers for dealing with other people's code
 nmap \t :set ts=4 sts=4 sw=4 noet<cr>
 nmap \s :set ts=4 sts=4 sw=4 et<cr>
-
-nmap <leader>w :setf textile<cr> :Goyo<cr>
 
 nnoremap <silent> <leader>u :call functions#HtmlUnEscape()<cr>
 
@@ -244,7 +258,7 @@ augroup configgroup
 
     autocmd BufNewFile,BufRead,BufWrite *.md syntax match Comment /\%^---\_.\{-}---$/
 
-    autocmd! BufWritePost * Neomake
+"    autocmd! BufWritePost * Neomake
 augroup END
 
 " }}}
@@ -263,7 +277,9 @@ let NERDTreeShowHidden=1
 let NERDTreeDirArrowExpandable = '▷'
 let NERDTreeDirArrowCollapsible = '▼'
 
-let g:fzf_layout = { 'down': '~25%' }
+let $FZF_DEFAULT_COMMAND = 'ag -g ""'
+
+let g:fzf_layout = { 'down': '~15%' }
 
 if isdirectory(".git")
     " if in a git project, use :GFiles
@@ -274,7 +290,7 @@ else
 endif
 
 nmap <silent> <leader>r :Buffers<cr>
-nmap <silent> <leader>e :FZF<cr>
+nmap <silent> <C-p> :FZF<cr>
 nmap <leader><tab> <plug>(fzf-maps-n)
 xmap <leader><tab> <plug>(fzf-maps-x)
 omap <leader><tab> <plug>(fzf-maps-o)
@@ -299,6 +315,10 @@ command! FZFMru call fzf#run({
 \  'sink':    'e',
 \  'options': '-m -x +s',
 \  'down':    '40%'})
+
+command! -bang -nargs=* Find call fzf#vim#grep(
+	\ 'rg --column --line-number --no-heading --follow --color=always '.<q-args>, 1,
+	\ <bang>0 ? fzf#vim#with_preview('up:60%') : fzf#vim#with_preview('right:50%:hidden', '?'), <bang>0)
 
 
 " Fugitive Shortcuts
@@ -337,8 +357,6 @@ let g:airline#extensions#tabline#tab_min_count = 2 " only show tabline if tabs a
 let g:airline#extensions#tabline#show_buffers = 0 " do not show open buffers in tabline
 let g:airline#extensions#tabline#show_splits = 0
 
-let g:tsuquyomi_disable_default_mappings = 1
-
 " don't hide quotes in json files
 let g:vim_json_syntax_conceal = 0
 
@@ -347,3 +365,4 @@ let g:SuperTabCrMapping = 0
 " }}}
 
 " vim:foldmethod=marker:foldlevel=0
+language en_US
