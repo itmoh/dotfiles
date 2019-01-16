@@ -18,6 +18,7 @@
     s = status --short
     ss  = status
     br = branch -v
+    addnw = "!sh -c 'git diff -U0 -w --no-color \"$@\" | git apply --cached --ignore-whitespace --unidiff-zero -'"
 
     # rebase commands
     cont = rebase --continue
@@ -27,6 +28,9 @@
 
     # show what I did today
     day = "!sh -c 'git log --reverse --no-merges --branches=* --date=local --after=\"yesterday 11:59PM\" --author=\"`git config --get user.name`\"'"
+
+    # show the committers in the last 100 commits, sorted by who has commited the most
+    review = "!git log --no-merges --pretty=%an | head -n 100 | sort | uniq -c | sort -nr"
 
     # order files by number of commits, ascending
     # Written by Corey Haines
@@ -143,8 +147,6 @@
     whitespace = cr-at-eol
 [rerere]
     enabled = true
-[gitsh]
-    defaultCommand = s
 [grep]
     extendRegexp = true
     lineNumber = true
@@ -157,6 +159,7 @@
 	trustexitcode = true
 [rebase]
 	instructionFormat = "[%an - %ar] %s"
+	autoStash = true
 [pager]
     diff = "diff-so-fancy | less --tabs=4 -RFX"
     show = "diff-so-fancy | less --tabs=4 -RFX"
