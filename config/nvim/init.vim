@@ -60,8 +60,8 @@ call plug#begin('~/.config/nvim/plugged')
     set showbreak=… " show ellipsis at breaking
     set autoindent " automatically set indent of new line
     set ttyfast " faster redrawing
-    set diffopt+=vertical
-    set laststatus=2 " show the satus line all the time
+    set diffopt+=vertical,iwhite,internal,algorithm:patience,hiddenoff
+    set laststatus=2 " show the status line all the time
     set so=7 " set 7 lines to the cursors - when moving vertical
     set wildmenu " enhanced command line completion
     set hidden " current buffer can be put into background
@@ -73,9 +73,11 @@ call plug#begin('~/.config/nvim/plugged')
     set title " set terminal title
     set showmatch " show matching braces
     set mat=2 " how many tenths of a second to blink
+    set updatetime=300
+    set signcolumn=yes
+    set shortmess+=c
 
     " Tab control
-    set noexpandtab " insert tabs rather than spaces for <Tab>
     set smarttab " tab respects 'tabstop', 'shiftwidth', and 'softtabstop'
     set tabstop=4 " the visible width of tabs
     set softtabstop=4 " edit as if the tabs are 4 characters wide
@@ -132,13 +134,9 @@ call plug#begin('~/.config/nvim/plugged')
         \               [ 'readonly', 'filetype', 'filename' ]],
         \       'right': [ [ 'percent' ], [ 'lineinfo' ],
         \               [ 'fileformat', 'fileencoding' ],
-        \               [ 'linter_errors', 'linter_warnings' ]]
+        \               [ 'gitblame', 'currentfunction',  'cocstatus', 'linter_errors', 'linter_warnings' ]]
         \   },
         \   'component_expand': {
-        \       'linter': 'LightlineLinter',
-        \       'linter_warnings': 'LightlineLinterWarnings',
-        \       'linter_errors': 'LightlineLinterErrors',
-        \       'linter_ok': 'LightlineLinterOk'
         \   },
         \   'component_type': {
         \       'readonly': 'error',
@@ -150,7 +148,10 @@ call plug#begin('~/.config/nvim/plugged')
         \       'filename': 'LightlineFileName',
         \       'fileformat': 'LightlineFileFormat',
         \       'filetype': 'LightlineFileType',
-        \       'gitbranch': 'LightlineGitBranch'
+        \       'gitbranch': 'LightlineGitBranch',
+        \       'cocstatus': 'coc#status',
+        \       'currentfunction': 'CoCCurrentFunction',
+        \       'gitblame': 'CocGitBlame'
         \   },
         \   'tabline': {
         \       'left': [ [ 'tabs' ] ],
@@ -190,29 +191,6 @@ call plug#begin('~/.config/nvim/plugged')
             return WebDevIconsGetFileTypeSymbol()
         endfunction
 
-        function! LightlineLinter() abort
-            let l:counts = ale#statusline#Count(bufnr(''))
-            return l:counts.total == 0 ? '' : printf('×%d', l:counts.total)
-        endfunction
-
-        function! LightlineLinterWarnings() abort
-            let l:counts = ale#statusline#Count(bufnr(''))
-            let l:all_errors = l:counts.error + l:counts.style_error
-            let l:all_non_errors = l:counts.total - l:all_errors
-            return l:counts.total == 0 ? '' : '⚠ ' . printf('%d', all_non_errors)
-        endfunction
-
-        function! LightlineLinterErrors() abort
-            let l:counts = ale#statusline#Count(bufnr(''))
-            let l:all_errors = l:counts.error + l:counts.style_error
-            return l:counts.total == 0 ? '' : '✖ ' . printf('%d', all_errors)
-        endfunction
-
-        function! LightlineLinterOk() abort
-            let l:counts = ale#statusline#Count(bufnr(''))
-            return l:counts.total == 0 ? 'OK' : ''
-        endfunction
-
         function! LightlineGitBranch()
             return "\uE725" . (exists('*fugitive#head') ? fugitive#head() : '')
         endfunction
@@ -224,9 +202,13 @@ call plug#begin('~/.config/nvim/plugged')
             endif
         endfunction
 
-        augroup alestatus
-            autocmd User ALELintPost call LightlineUpdate()
-        augroup end
+        function! CoCCurrentFunction()
+            return get(b:, 'coc_current_function', '')
+        endfunction
+
+        function! CocGitBlame()
+            return winwidth(0) > 70 ? get(b:, 'coc_git_blame', '') : ''
+        endfunction
     " }}}
 " }}}
 
@@ -266,11 +248,9 @@ call plug#begin('~/.config/nvim/plugged')
 
     nmap <leader>l :set list!<cr>
 
-    " Textmate style indentation
-    vmap <leader>[ <gv
-    vmap <leader>] >gv
-    nmap <leader>[ <<
-    nmap <leader>] >>
+    " keep visual selection when indenting/outdenting
+    vmap < <gv
+    vmap > >gv
 
     " switch between current and last buffer
     nmap <leader>. <c-^>
@@ -283,7 +263,11 @@ call plug#begin('~/.config/nvim/plugged')
     map <silent> <C-k> :call functions#WinMove('k')<cr>
     map <silent> <C-l> :call functions#WinMove('l')<cr>
 
+    nnoremap <silent> <leader>z :call functions#zoom()<cr>
+
     map <leader>wc :wincmd q<cr>
+
+    inoremap <tab> <c-r>=functions#Smart_TabComplete()<CR>
 
     " move line mappings
     " ∆ is <A-j> on macOS
@@ -328,6 +312,100 @@ call plug#begin('~/.config/nvim/plugged')
 
     command! Rm call functions#Delete()
     command! RM call functions#Delete() <Bar> q!
+
+    " Custom text objects
+
+    " inner-line
+    xnoremap <silent> il :<c-u>normal! g_v^<cr>
+    onoremap <silent> il :<c-u>normal! g_v^<cr>
+
+    " around line
+    vnoremap <silent> al :<c-u>normal! $v0<cr>
+    onoremap <silent> al :<c-u>normal! $v0<cr>
+
+    let s:regNums = ['0b[01]', '0x\x', '\d' ]
+
+    " selec tthe next number on the line
+    " this can handle the following three formats:
+    "     1. binary  (eg: '0b1010', '0b0000', etc)
+    "     2. hex     (eg: '0xffff', '0x0000', etc)
+    "     3. decimal (eg: '0', '10', '01', etc)
+    function! s:inNumber()
+        " magic is required
+        let l:magic = &magic
+        set magic
+
+        let l:lineNr = line('.')
+
+        " create regex pattern matching any binary, hex, decimal number
+        let l:pat  = join(s:regNums, '\+\|') . '\+'
+
+        " move cursor to the end of number
+        if (!search(l:pat, 'ce', l:lineNr))
+            " if it fails, there was no match on this line
+            return
+        endif
+
+        " start visually selecting
+        normal! v
+
+        " move cursor to beginning of the number
+        call search(l:pat, 'cb', l:lineNr)
+
+        " restore magic
+        let &magic = l:magic
+    endfunction
+
+    " 'in number' (next number after cursor on current line)
+    xnoremap <silent> in :<c-u>call <sid>inNumber()<cr>
+    onoremap <silent> in :<c-u>call <sid>inNumber()<cr>
+
+    function! s:aroundNumber()
+        " select the next number on the line and any surrounding white-space;
+        " this can handle the following three formats (so long as s:regNums is
+        " defined as it should be above these functions):
+        "   1. binary  (eg: "0b1010", "0b0000", etc)
+        "   2. hex     (eg: "0xffff", "0x0000", "0x10af", etc)
+        "   3. decimal (eg: "0", "0000", "10", "01", etc)
+        " NOTE: if there is no number on the rest of the line starting at the
+        "       current cursor position, then visual selection mode is ended (if
+        "       called via an omap) or nothing is selected (if called via xmap);
+        "       this is true even if on the space following a number
+
+        " need magic for this to work properly
+        let l:magic = &magic
+        set magic
+
+        let l:lineNr = line('.')
+
+        " create regex pattern matching any binary, hex, decimal number
+        let l:pat = join(s:regNums, '\+\|') . '\+'
+
+        " move cursor to end of number
+        if (!search(l:pat, 'ce', l:lineNr))
+            " if it fails, there was not match on the line, so return prematurely
+            return
+        endif
+
+        " move cursor to end of any trailing white-space (if there is any)
+        call search('\%'.(virtcol('.')+1).'v\s*', 'ce', l:lineNr)
+
+        " start visually selecting from end of number + potential trailing whitspace
+        normal! v
+
+        " move cursor to beginning of number
+        call search(l:pat, 'cb', l:lineNr)
+
+        " move cursor to beginning of any white-space preceding number (if any)
+        call search('\s*\%'.virtcol('.').'v', 'b', l:lineNr)
+
+        " restore magic
+        let &magic = l:magic
+    endfunction
+
+    " 'around number' (next number on line and possible surrounding white-space)
+    xnoremap <silent> an :<c-u>call <sid>aroundNumber()<cr>
+    onoremap <silent> an :<c-u>call <sid>aroundNumber()<cr>
 " }}}
 
 " AutoGroups {{{
@@ -357,9 +435,6 @@ call plug#begin('~/.config/nvim/plugged')
     " search inside files using ripgrep. This plugin provides an Ack command.
     Plug 'wincent/ferret'
 
-    " insert or delete brackets, parens, quotes in pair
-    Plug 'jiangmiao/auto-pairs'
-
     " easy commenting motions
     Plug 'tpope/vim-commentary'
 
@@ -381,17 +456,8 @@ call plug#begin('~/.config/nvim/plugged')
     " .editorconfig support
     Plug 'editorconfig/editorconfig-vim'
 
-    " asynchronous build and test dispatcher
-    Plug 'tpope/vim-dispatch'
-
-    " netrw helper
-    Plug 'tpope/vim-vinegar'
-
     " single/multi line code handler: gS - split one line into multiple, gJ - combine multiple lines into one
     Plug 'AndrewRadev/splitjoin.vim'
-
-    " extended % matching
-    Plug 'vim-scripts/matchit.zip'
 
     " add end, endif, etc. automatically
     Plug 'tpope/vim-endwise'
@@ -431,15 +497,14 @@ call plug#begin('~/.config/nvim/plugged')
         \ ]
 
         let g:startify_bookmarks = [
-            \ { 'c': '~/code/dotfiles/config/nvim/init.vim' },
-            \ { 'z': '~/code/dotfiles/zsh/zshrc.symlink' }
+            \ { 'c': '~/.config/nvim/init.vim' },
+            \ { 'g': '~/.gitconfig' },
+            \ { 'z': '~/.zshrc' }
         \ ]
 
         autocmd User Startified setlocal cursorline
+        nmap <leader>st :Startify<cr>
     " }}}
-
-    " Open selection in carbon.now.sh
-    Plug 'kristijanhusak/vim-carbon-now-sh'
 
     " Close buffers but keep splits
     Plug 'moll/vim-bbye'
@@ -577,82 +642,103 @@ call plug#begin('~/.config/nvim/plugged')
             \ call fzf#vim#gitfiles(<q-args>, fzf#vim#with_preview('right:50%', '?'), <bang>0)
     " }}}
 
-    " signify {{{
-        " Plug 'airblade/vim-gitgutter'
-        Plug 'mhinz/vim-signify'
-        let g:signify_vcs_list = [ 'git' ]
-        let g:signify_sign_add               = '+'
-        let g:signify_sign_delete            = '_'
-        let g:signify_sign_delete_first_line = '‾'
-        let g:signify_sign_change = '!'
-    " }}}
-
     " vim-fugitive {{{
         Plug 'tpope/vim-fugitive'
-        Plug 'tpope/vim-rhubarb' " hub extension for fugitive
-        Plug 'junegunn/gv.vim'
-        Plug 'sodapopcan/vim-twiggy'
-        Plug 'christoomey/vim-conflicted'
         nmap <silent> <leader>gs :Gstatus<cr>
         nmap <leader>ge :Gedit<cr>
         nmap <silent><leader>gr :Gread<cr>
         nmap <silent><leader>gb :Gblame<cr>
-    " }}}
 
-    " ALE {{{
-        Plug 'w0rp/ale' " Asynchonous linting engine
-        let g:ale_set_highlights = 0
-        let g:ale_change_sign_column_color = 0
-        let g:ale_sign_column_always = 1
-        let g:ale_sign_error = '✖'
-        let g:ale_sign_warning = '⚠'
-        let g:ale_echo_msg_error_str = '✖'
-        let g:ale_echo_msg_warning_str = '⚠'
-        let g:ale_echo_msg_format = '%severity% %s% [%linter%% code%]'
-        let g:ale_completion_enabled = 1
-
-        let g:ale_linters = {
-        \   'javascript': ['eslint', 'tsserver'],
-        \   'typescript': ['tsserver', 'tslint'],
-        \   'typescript.tsx': ['tsserver', 'tslint'],
-        \   'html': []
-        \}
-        let g:ale_fixers = {}
-        let g:ale_fixers['javascript'] = ['prettier']
-        let g:ale_fixers['typescript'] = ['prettier', 'tslint']
-        let g:ale_fixers['json'] = ['prettier']
-        let g:ale_fixers['css'] = ['prettier']
-        let g:ale_javascript_prettier_use_local_config = 1
-        let g:ale_fix_on_save = 0
-        nmap <silent><leader>af :ALEFix<cr>
+        Plug 'tpope/vim-rhubarb' " hub extension for fugitive
+        Plug 'junegunn/gv.vim'
+        Plug 'sodapopcan/vim-twiggy'
     " }}}
 
     " UltiSnips {{{
         Plug 'SirVer/ultisnips' " Snippets plugin
-        let g:UltiSnipsExpandTrigger="<tab>"
+        " let g:UltiSnipsExpandTrigger="<tab>"
     " }}}
 
-    " Completion {{{
-        " if (has('nvim'))
-        "     Plug 'Shougo/deoplete.nvim', { 'do': ':UpdateRemotePlugins' }
-        " else
-        "     Plug 'Shougo/deoplete.nvim'
-        "     Plug 'roxma/nvim-yarp'
-        "     Plug 'roxma/vim-hug-neovim-rpc'
-        " endif
-        " let g:deoplete#enable_at_startup = 1
+    " coc {{{
+        Plug 'neoclide/coc.nvim', {'do': 'yarn install --frozen-lockfile'}
+
+        let g:coc_global_extensions = [
+        \ 'coc-css',
+        \ 'coc-json',
+        \ 'coc-tsserver',
+        \ 'coc-git',
+        \ 'coc-eslint',
+        \ 'coc-tslint-plugin',
+        \ 'coc-pairs',
+        \ 'coc-emoji',
+        \ 'coc-sh',
+        \ 'coc-vimlsp',
+        \ 'coc-emmet',
+        \ 'coc-prettier'
+        \ ]
+
+        autocmd CursorHold * silent call CocActionAsync('highlight')
+
+        " coc-prettier
+        command! -nargs=0 Prettier :CocCommand prettier.formatFile
+        nmap <leader>f :CocCommand prettier.formatFile<cr>
+
+        " coc-git
+        nmap [g <Plug>(coc-git-prevchunk)
+        nmap ]g <Plug>(coc-git-nextchunk)
+        nmap gs <Plug>(coc-git-chunkinfo)
+        nmap gu :CocCommand git.chunkUndo<cr>
+
+        "remap keys for gotos
+        nmap <silent> gd <Plug>(coc-definition)
+        nmap <silent> gy <Plug>(coc-type-definition)
+        nmap <silent> gi <Plug>(coc-implementation)
+        nmap <silent> gr <Plug>(coc-references)
+        nmap <silent> gh <Plug>(coc-doHover)
+
+        " diagnostics navigation
+        nmap <silent> [c <Plug>(coc-diagnostic-prev)
+        nmap <silent> ]c <Plug>(coc-diagnostic-next)
+
+        " rename
+        nmap <silent> <leader>rn <Plug>(coc-rename)
+
+        " Remap for format selected region
+        xmap <leader>f  <Plug>(coc-format-selected)
+        nmap <leader>f  <Plug>(coc-format-selected)
+
+        " organize imports
+        command! -nargs=0 OR :call CocAction('runCommand', 'editor.action.organizeImport')
+
+        " Use K to show documentation in preview window
+        nnoremap <silent> K :call <SID>show_documentation()<CR>
+
+        function! s:show_documentation()
+            if (index(['vim','help'], &filetype) >= 0)
+                execute 'h '.expand('<cword>')
+            else
+                call CocAction('doHover')
+            endif
+        endfunction
+
+        "tab completion
+        inoremap <silent><expr> <TAB>
+            \ pumvisible() ? "\<C-n>" :
+            \ <SID>check_back_space() ? "\<TAB>" :
+            \ coc#refresh()
+        inoremap <expr><S-TAB> pumvisible() ? "\<C-p>" : "\<C-h>"
+
+        function! s:check_back_space() abort
+        let col = col('.') - 1
+        return !col || getline('.')[col - 1]  =~# '\s'
+        endfunction
     " }}}
 " }}}
 
 " Language-Specific Configuration {{{
     " html / templates {{{
         " emmet support for vim - easily create markdup wth CSS-like syntax
-        Plug 'mattn/emmet-vim', { 'for': ['html', 'javascript.jsx']}
-        let g:user_emmet_settings = {
-        \  'javascript.jsx': {
-        \      'extends': 'jsx',
-        \  },
-        \}
+        Plug 'mattn/emmet-vim'
 
         " match tags in html, similar to paren support
         Plug 'gregsexton/MatchTag', { 'for': 'html' }
@@ -665,24 +751,23 @@ call plug#begin('~/.config/nvim/plugged')
 
         " pug / jade support
         Plug 'digitaltoad/vim-pug', { 'for': ['jade', 'pug'] }
+
+		" nunjucks support
+        Plug 'niftylettuce/vim-jinja', { 'for': 'njk' }
     " }}}
 
     " JavaScript {{{
         Plug 'othree/yajs.vim', { 'for': [ 'javascript', 'javascript.jsx', 'html' ] }
         " Plug 'pangloss/vim-javascript', { 'for': ['javascript', 'javascript.jsx', 'html'] }
         Plug 'moll/vim-node', { 'for': 'javascript' }
-        Plug 'mxw/vim-jsx', { 'for': ['javascript.jsx', 'javascript'] }
-        Plug 'ternjs/tern_for_vim', { 'for': ['javascript', 'javascript.jsx'], 'do': 'npm install' }
+		Plug 'ternjs/tern_for_vim', { 'for': ['javascript', 'javascript.jsx'], 'do': 'npm install' }
+		Plug 'MaxMEllon/vim-jsx-pretty'
+		let g:vim_jsx_pretty_highlight_close_tag = 1
     " }}}
 
     " TypeScript {{{
-        Plug 'leafgarland/typescript-vim', { 'for': 'typescript' }
-        Plug 'ianks/vim-tsx', { 'for': 'typescript' }
-        Plug 'Shougo/vimproc.vim', { 'do': 'make' }
-
-        " Plug 'mhartington/nvim-typescript', { 'for': 'typescript', 'do': './install.sh' }
-        " let g:nvim_typescript#diagnostics_enable = 0
-        " let g:nvim_typescript#max_completion_detail=100
+        Plug 'leafgarland/typescript-vim', { 'for': ['typescript', 'typescript.tsx'] }
+        " Plug 'Shougo/vimproc.vim', { 'do': 'make' } TODO what still needs this?
     " }}}
 
 
@@ -691,13 +776,18 @@ call plug#begin('~/.config/nvim/plugged')
         Plug 'groenewege/vim-less', { 'for': 'less' }
         Plug 'hail2u/vim-css3-syntax', { 'for': 'css' }
         Plug 'cakebaker/scss-syntax.vim', { 'for': 'scss' }
-        Plug 'gko/vim-coloresque'
         Plug 'stephenway/postcss.vim', { 'for': 'css' }
     " }}}
 
     " markdown {{{
         Plug 'tpope/vim-markdown', { 'for': 'markdown' }
         let g:markdown_fenced_languages = [ 'tsx=typescript.tsx' ]
+
+        " Open markdown files in Marked.app - mapped to <leader>m
+        Plug 'itspriddle/vim-marked', { 'for': 'markdown', 'on': 'MarkedOpen' }
+        nmap <leader>m :MarkedOpen!<cr>
+        nmap <leader>mq :MarkedQuit<cr>
+        nmap <leader>* *<c-o>:%s///gn<cr>
     " }}}
 
     " JSON {{{
@@ -736,7 +826,6 @@ call plug#end()
     highlight xmlAttrib cterm=italic term=italic gui=italic
     " highlight Type cterm=italic term=italic gui=italic
     highlight Normal ctermbg=none
-
 " }}}
 
 " vim:set foldmethod=marker foldlevel=0
