@@ -1,9 +1,9 @@
 # gitconfig
 [user]
-    name = Nick Nisi
-    email = nick@nisi.org
+	name = Maksym Tarasenko
+	email = itmoh.me@gmail.com
 [github]
-    user = nicknisi
+	user = itmoh
 [init]
     templatedir = ~/.dotfiles/git/templates
 [alias]
@@ -106,6 +106,7 @@
     # check out a local copy of a PR. https://gist.github.com/gnarf/5406589
     pr = "!f() { git fetch -fu ${2:-origin} refs/pull/$1/head:pr/$1 && git checkout pr/$1; }; f"
     pr-clean = "!git for-each-ref refs/heads/pr/* --format='%(refname)' | while read ref ; do branch=${ref#refs/heads/} ; git branch -D $branch ; done"
+	hist = log --pretty=format:'%h %ad | %s%d [%an]' --graph --date=short
 [color]
     diff = auto
     status = auto
