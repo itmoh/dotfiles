@@ -436,13 +436,13 @@ call plug#begin('~/.config/nvim/plugged')
     Plug 'wincent/ferret'
 
     " easy commenting motions
-    Plug 'tpope/vim-commentary'
+    " Plug 'tpope/vim-commentary'
 
     " mappings which are simply short normal mode aliases for commonly used ex commands
     Plug 'tpope/vim-unimpaired'
 
     " endings for html, xml, etc. - ehances surround
-    Plug 'tpope/vim-ragtag'
+    " Plug 'tpope/vim-ragtag'
 
     " mappings to easily delete, change and add such surroundings in pairs, such as quotes, parens, etc.
     Plug 'tpope/vim-surround'
@@ -660,85 +660,85 @@ call plug#begin('~/.config/nvim/plugged')
     " }}}
 
     " coc {{{
-        Plug 'neoclide/coc.nvim', {'do': 'yarn install --frozen-lockfile'}
+    "   Plug 'neoclide/coc.nvim', {'do': 'yarn install --frozen-lockfile'}
 
-        let g:coc_global_extensions = [
-        \ 'coc-css',
-        \ 'coc-json',
-        \ 'coc-tsserver',
-        \ 'coc-git',
-        \ 'coc-eslint',
-        \ 'coc-tslint-plugin',
-        \ 'coc-pairs',
-        \ 'coc-emoji',
-        \ 'coc-sh',
-        \ 'coc-vimlsp',
-        \ 'coc-emmet',
-        \ 'coc-prettier'
-        \ ]
+    "   let g:coc_global_extensions = [
+    "   \ 'coc-css',
+    "   \ 'coc-json',
+    "   \ 'coc-tsserver',
+    "   \ 'coc-git',
+    "   \ 'coc-eslint',
+    "   \ 'coc-tslint-plugin',
+    "   \ 'coc-pairs',
+    "   \ 'coc-emoji',
+    "   \ 'coc-sh',
+    "   \ 'coc-vimlsp',
+    "   \ 'coc-emmet',
+    "   \ 'coc-prettier'
+    "   \ ]
 
-        autocmd CursorHold * silent call CocActionAsync('highlight')
+    "   autocmd CursorHold * silent call CocActionAsync('highlight')
 
-        " coc-prettier
-        command! -nargs=0 Prettier :CocCommand prettier.formatFile
-        nmap <leader>f :CocCommand prettier.formatFile<cr>
+    "   " coc-prettier
+    "   command! -nargs=0 Prettier :CocCommand prettier.formatFile
+    "   nmap <leader>f :CocCommand prettier.formatFile<cr>
 
-        " coc-git
-        nmap [g <Plug>(coc-git-prevchunk)
-        nmap ]g <Plug>(coc-git-nextchunk)
-        nmap gs <Plug>(coc-git-chunkinfo)
-        nmap gu :CocCommand git.chunkUndo<cr>
+    "   " coc-git
+    "   nmap [g <Plug>(coc-git-prevchunk)
+    "   nmap ]g <Plug>(coc-git-nextchunk)
+    "   nmap gs <Plug>(coc-git-chunkinfo)
+    "   nmap gu :CocCommand git.chunkUndo<cr>
 
-        "remap keys for gotos
-        nmap <silent> gd <Plug>(coc-definition)
-        nmap <silent> gy <Plug>(coc-type-definition)
-        nmap <silent> gi <Plug>(coc-implementation)
-        nmap <silent> gr <Plug>(coc-references)
-        nmap <silent> gh <Plug>(coc-doHover)
+    "   "remap keys for gotos
+    "   nmap <silent> gd <Plug>(coc-definition)
+    "   nmap <silent> gy <Plug>(coc-type-definition)
+    "   nmap <silent> gi <Plug>(coc-implementation)
+    "   nmap <silent> gr <Plug>(coc-references)
+    "   nmap <silent> gh <Plug>(coc-doHover)
 
-        " diagnostics navigation
-        nmap <silent> [c <Plug>(coc-diagnostic-prev)
-        nmap <silent> ]c <Plug>(coc-diagnostic-next)
+    "   " diagnostics navigation
+    "   nmap <silent> [c <Plug>(coc-diagnostic-prev)
+    "   nmap <silent> ]c <Plug>(coc-diagnostic-next)
 
-        " rename
-        nmap <silent> <leader>rn <Plug>(coc-rename)
+    "   " rename
+    "   nmap <silent> <leader>rn <Plug>(coc-rename)
 
-        " Remap for format selected region
-        xmap <leader>f  <Plug>(coc-format-selected)
-        nmap <leader>f  <Plug>(coc-format-selected)
+    "   " Remap for format selected region
+    "   xmap <leader>f  <Plug>(coc-format-selected)
+    "   nmap <leader>f  <Plug>(coc-format-selected)
 
-        " organize imports
-        command! -nargs=0 OR :call CocAction('runCommand', 'editor.action.organizeImport')
+    "   " organize imports
+    "   command! -nargs=0 OR :call CocAction('runCommand', 'editor.action.organizeImport')
 
-        " Use K to show documentation in preview window
-        nnoremap <silent> K :call <SID>show_documentation()<CR>
+    "   " Use K to show documentation in preview window
+    "   nnoremap <silent> K :call <SID>show_documentation()<CR>
 
-        function! s:show_documentation()
-            if (index(['vim','help'], &filetype) >= 0)
-                execute 'h '.expand('<cword>')
-            else
-                call CocAction('doHover')
-            endif
-        endfunction
+    "   function! s:show_documentation()
+    "       if (index(['vim','help'], &filetype) >= 0)
+    "           execute 'h '.expand('<cword>')
+    "       else
+    "           call CocAction('doHover')
+    "       endif
+    "   endfunction
 
-        "tab completion
-        inoremap <silent><expr> <TAB>
-            \ pumvisible() ? "\<C-n>" :
-            \ <SID>check_back_space() ? "\<TAB>" :
-            \ coc#refresh()
-        inoremap <expr><S-TAB> pumvisible() ? "\<C-p>" : "\<C-h>"
+    "   "tab completion
+    "   inoremap <silent><expr> <TAB>
+    "       \ pumvisible() ? "\<C-n>" :
+    "       \ <SID>check_back_space() ? "\<TAB>" :
+    "       \ coc#refresh()
+    "   inoremap <expr><S-TAB> pumvisible() ? "\<C-p>" : "\<C-h>"
 
-        function! s:check_back_space() abort
-        let col = col('.') - 1
-        return !col || getline('.')[col - 1]  =~# '\s'
-        endfunction
+    "   function! s:check_back_space() abort
+    "   let col = col('.') - 1
+    "   return !col || getline('.')[col - 1]  =~# '\s'
+    "   endfunction
     " }}}
 " }}}
 
 " Language-Specific Configuration {{{
     " html / templates {{{
         " emmet support for vim - easily create markdup wth CSS-like syntax
-        Plug 'mattn/emmet-vim'
+        " Plug 'mattn/emmet-vim'
 
         " match tags in html, similar to paren support
         Plug 'gregsexton/MatchTag', { 'for': 'html' }
@@ -747,20 +747,20 @@ call plug#begin('~/.config/nvim/plugged')
         Plug 'othree/html5.vim', { 'for': 'html' }
 
         " mustache support
-        Plug 'mustache/vim-mustache-handlebars'
+        " Plug 'mustache/vim-mustache-handlebars'
 
         " pug / jade support
-        Plug 'digitaltoad/vim-pug', { 'for': ['jade', 'pug'] }
+        " Plug 'digitaltoad/vim-pug', { 'for': ['jade', 'pug'] }
 
 		" nunjucks support
-        Plug 'niftylettuce/vim-jinja', { 'for': 'njk' }
+        " Plug 'niftylettuce/vim-jinja', { 'for': 'njk' }
     " }}}
 
     " JavaScript {{{
-        Plug 'othree/yajs.vim', { 'for': [ 'javascript', 'javascript.jsx', 'html' ] }
+        " Plug 'othree/yajs.vim', { 'for': [ 'javascript', 'javascript.jsx', 'html' ] }
         " Plug 'pangloss/vim-javascript', { 'for': ['javascript', 'javascript.jsx', 'html'] }
         Plug 'moll/vim-node', { 'for': 'javascript' }
-		Plug 'ternjs/tern_for_vim', { 'for': ['javascript', 'javascript.jsx'], 'do': 'npm install' }
+		" Plug 'ternjs/tern_for_vim', { 'for': ['javascript', 'javascript.jsx'], 'do': 'npm install' }
 		Plug 'MaxMEllon/vim-jsx-pretty'
 		let g:vim_jsx_pretty_highlight_close_tag = 1
     " }}}
@@ -795,10 +795,10 @@ call plug#begin('~/.config/nvim/plugged')
         let g:vim_json_syntax_conceal = 0
     " }}}
 
-    Plug 'fatih/vim-go', { 'for': 'go' }
+    " Plug 'fatih/vim-go', { 'for': 'go' }
     Plug 'timcharper/textile.vim', { 'for': 'textile' }
-    Plug 'lambdatoast/elm.vim', { 'for': 'elm' }
-    Plug 'ekalinin/Dockerfile.vim'
+    " Plug 'lambdatoast/elm.vim', { 'for': 'elm' }
+    " Plug 'ekalinin/Dockerfile.vim'
 " }}}
 
 call plug#end()

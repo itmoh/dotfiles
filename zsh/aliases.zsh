@@ -74,3 +74,5 @@ alias chrome="/Applications/Google\\ \\Chrome.app/Contents/MacOS/Google\\ \\Chro
 alias canary="/Applications/Google\\ Chrome\\ Canary.app/Contents/MacOS/Google\\ Chrome\\ Canary"
 
 alias pcat='pygmentize -f terminal256 -O style=native -g'
+
+alias clr_node_modules="find . -name 'node_modules' -type d -prune -exec rm -rf '{}' +"

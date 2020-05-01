@@ -32,3 +32,21 @@ endsnippet
 snippet ima "import * as " b
 import * as $1 from '$2'
 endsnippet
+
+snippet it "jest test start" b
+it('should $1', () => {
+  $2
+});
+endsnippet
+
+snippet des "jest describe" b
+describe('$1', () => {
+  $2
+});
+endsnippet
+
+snippet be "jest before each" b
+beforeEach(() => {
+  $1
+});
+endsnippet
