@@ -500,7 +500,7 @@ call plug#begin('~/.config/nvim/plugged')
     " }}}
 
     " coc {{{
-        Plug 'neoclide/coc.nvim', {'do': 'yarn install --frozen-lockfile'}
+        Plug 'neoclide/coc.nvim', {'do': 'yarn install'}
 
         let g:coc_global_extensions = [
         \ 'coc-css',
@@ -603,10 +603,10 @@ call plug#begin('~/.config/nvim/plugged')
         Plug 'othree/html5.vim', { 'for': 'html' }
 
         " mustache support
-        Plug 'mustache/vim-mustache-handlebars'
+        " Plug 'mustache/vim-mustache-handlebars'
 
         " pug / jade support
-        Plug 'digitaltoad/vim-pug', { 'for': ['jade', 'pug'] }
+        " Plug 'digitaltoad/vim-pug', { 'for': ['jade', 'pug'] }
 
 		" nunjucks support
         Plug 'Glench/Vim-Jinja2-Syntax', { 'for': 'njk' }

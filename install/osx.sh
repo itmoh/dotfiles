@@ -115,13 +115,13 @@ defaults write NSGlobalDomain InitialKeyRepeat -int 15
 # defaults write com.apple.finder OpenWindowForNewRemovableDisk -bool true
 
 # echo "Display full POSIX path as Finder window title"
-# defaults write com.apple.finder _FXShowPosixPathInTitle -bool true
+defaults write com.apple.finder _FXShowPosixPathInTitle -bool true
 
 # Increase window resize speed for Cocoa applications
 # defaults write NSGlobalDomain NSWindowResizeTime -float 0.001
 
 # echo "Avoid creating .DS_Store files on network volumes"
-# defaults write com.apple.desktopservices DSDontWriteNetworkStores -bool true
+defaults write com.apple.desktopservices DSDontWriteNetworkStores -bool true
 
 # echo "Disable the warning when changing a file extension"
 # defaults write com.apple.finder FXEnableExtensionChangeWarning -bool false
@@ -139,8 +139,8 @@ defaults write NSGlobalDomain InitialKeyRepeat -int 15
 # defaults write com.apple.finder EmptyTrashSecurely -bool true
 
 #echo "Require password immediately after sleep or screen saver begins"
-#defaults write com.apple.screensaver askForPassword -int 1
-#defaults write com.apple.screensaver askForPasswordDelay -int 0
+defaults write com.apple.screensaver askForPassword -int 1
+defaults write com.apple.screensaver askForPasswordDelay -int 0
 
 echo "Enable tap to click (Trackpad)"
 defaults write com.apple.driver.AppleBluetoothMultitouch.trackpad Clicking -bool true
